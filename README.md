@@ -55,7 +55,7 @@ DNS Verification: nslookup tests confirmed the resolution of kali.akram.lab via 
 /configs: Contains dhcpd.conf, named.conf.options, and zone files.
 
 
-/documentation: Includes the Full Project Documentation (PDF).
+documentation du proojet: Includes the Full Project Documentation (PDF).
 
 
 Created by Akram Khoulid 3rd-year Networks and Telecommunications Engineering Student at ENSA Safi.
