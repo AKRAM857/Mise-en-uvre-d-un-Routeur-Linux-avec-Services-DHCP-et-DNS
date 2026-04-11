@@ -1,0 +1,12 @@
+$TTL    604800
+@       IN      SOA     ns1.akram.lab. admin.akram.lab. (
+                              2026040401 ; Serial
+                                  604800 ; Refresh
+                                   86400 ; Retry
+                                 2419200 ; Expire
+                                  604800 ) ; Negative Cache TTL
+;
+@       IN      NS      ns1.akram.lab.
+ns1.akram.lab.  IN      A       192.168.10.1
+kali            IN      A       192.168.10.20
+alpine          IN      A       192.168.20.10
