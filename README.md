@@ -100,12 +100,12 @@ doesn't know which port to deliver the reply to.
 |---|---|
 | Kali gets IP via DHCP | ✅ 192.168.10.x |
 | Alpine gets IP via DHCP | ✅ 192.168.20.x |
-| Kali pings Ubuntu | ✅ |
-| Alpine pings Ubuntu | ✅ |
-| Kali resolves kali.akram.lab | ✅ |
-| Alpine resolves kali.akram.lab | ✅ |
-| Kali pings 8.8.8.8 | ✅ |
-| Alpine pings 8.8.8.8 | ✅ |
+| Kali pings Ubuntu | ✅yes |
+| Alpine pings Ubuntu | ✅yes |
+| Kali resolves kali.akram.lab | ✅yes |
+| Alpine resolves kali.akram.lab | ✅yes |
+| Kali pings 8.8.8.8 | ✅yes |
+| Alpine pings 8.8.8.8 | ✅yes |
 
 ---
 ---
