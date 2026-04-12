@@ -109,6 +109,23 @@ doesn't know which port to deliver the reply to.
 
 ---
 ---
+Section: Security Analysis & Threat Modeling
+Vulnerability: DNS Spoofing via ARP Poisoning
+In this phase, I utilized a Kali Linux node to execute a Man-In-The-Middle (MITM) attack against an Alpine client within the lab.
+
+Attack Vector: ARP Spoofing was used to intercept traffic between the client and the gateway.
+
+Exploitation: Leveraged DNS Spoofing to intercept queries for google.com and redirect them to a local malicious IP (192.168.10.20).
+
+Evidence: Wireshark captures (included in /assets) show the forged DNS responses successfully overriding authoritative answers.
+
+Mitigation: Implementing an Authoritative Local DNS
+To defend against external DNS manipulation and increase network sovereignty:
+
+The Solution: I deployed an authoritative BIND9 server on the Ubuntu core.
+
+The Result: By forcing all clients to resolve through a trusted internal authority, I reduced the attack surface for external poisoning and gained full visibility into local traffic logs.
+---
 
 ## Author
 
