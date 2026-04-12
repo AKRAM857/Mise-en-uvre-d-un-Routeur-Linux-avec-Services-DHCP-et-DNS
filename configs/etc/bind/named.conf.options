@@ -4,14 +4,17 @@ options {
         localhost;
         127.0.0.1;
         192.168.10.1;
+        192.168.20.1;
     };
     allow-query { 
         localhost;
         192.168.10.0/24;
+        192.168.20.0/24;
     };
     allow-recursion { 
         localhost;
         192.168.10.0/24;
+        192.168.20.0/24;
     };
     listen-on-v6 {none;};
     forwarders {
