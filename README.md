@@ -5,28 +5,28 @@ router, DHCP server, DNS resolver, and SDN controller for Kali Linux and Alpine 
 enhanced with Open vSwitch for software-defined networking.
 
 ---
-
 ## Architecture
-UBUNTU (Router / Controller)
-                ┌─────────────────────────────────┐
-                │         OVS Bridge: bridge12     │
-                │                                  │
-                │  bridge12 (internal) tag:10      │ ← 192.168.10.1 (LAN1 gateway)
-                │  enp0s8 (cable)      tag:10      │ ← connected to Kali (LAN)
-                │  vlan20  (internal)  tag:20      │ ← 192.168.20.1 (LAN2 gateway)
-                │  enp0s9  (cable)     tag:20      │ ← connected to Alpine (LAN2)
-                │                                  │
-                │  enp0s3 (WAN - NAT)              │ ← Internet
-                └─────────────────────────────────┘
-                       |                |
-          ┌────────────┘                └──────────────┐
-          │                                            │
-┌─────────────────┐                        ┌─────────────────┐
-│   Kali Linux    │                        │  Alpine Linux   │
-│ 192.168.10.20   │                        │ 192.168.20.20   │
-│   (LAN - tag10) │                        │  (LAN2 - tag20) │
-└─────────────────┘                        └─────────────────┘
----
+
+```
+                        UBUNTU (Router / Controller)
+                 ┌──────────────────────────────────────┐
+                 │          OVS Bridge: bridge12         │
+                 │                                      │
+                 │  bridge12 (internal) tag:10  192.168.10.1 │
+                 │  enp0s8   (cable)    tag:10  ──→ Kali    │
+                 │  vlan20   (internal) tag:20  192.168.20.1 │
+                 │  enp0s9   (cable)    tag:20  ──→ Alpine  │
+                 │  enp0s3   (WAN/NAT)  ──→ Internet        │
+                 └──────────────────────────────────────┘
+                        |                    |
+           ┌────────────┘                    └─────────────┐
+           │                                               │
+  ┌─────────────────┐                        ┌──────────────────┐
+  │   Kali Linux    │                        │  Alpine Linux    │
+  │ 192.168.10.20   │                        │ 192.168.20.20    │
+  │  VLAN 10 (LAN)  │                        │  VLAN 20 (LAN2)  │
+  └─────────────────┘                        └──────────────────┘
+```
 
 ## Stack
 
