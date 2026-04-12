@@ -1,0 +1,18 @@
+/etc/netplan# ovs-vsctl show
+931c86ea-f6af-4688-bea5-0563e34cdcd d
+    Bridge bridge12
+        Port bridge12
+            tag: 10
+            Interface bridge12
+                type: internal
+        Port enp0s9
+            tag: 20
+            Interface enp0s9
+        Port vlan20
+            tag: 20
+            Interface vlan20
+                type: internal
+        Port enp0s8
+            tag: 10
+            Interface enp0s8
+    ovs_version: "3.6.0"
