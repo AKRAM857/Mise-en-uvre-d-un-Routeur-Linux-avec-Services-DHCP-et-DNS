@@ -1,61 +1,117 @@
-# Implementing a Linux Router with DHCP and DNS Services
+# Linux Router with DHCP, DNS & SDN (Open vSwitch)
 
+A VirtualBox lab simulating a professional network infrastructure where an Ubuntu VM acts as a 
+router, DHCP server, DNS resolver, and SDN controller for Kali Linux and Alpine Linux clients, 
+enhanced with Open vSwitch for software-defined networking.
 
-This project demonstrates the transformation of an Ubuntu instance into a central network gateway, serving as a robust bridge between WAN and LAN interfaces by implementing IP forwarding and NAT. It showcases the seamless integration of critical infrastructure services, specifically DHCP for automated client addressing and BIND9 DNS for private name resolution within the akram.lab domain. Furthermore, the project highlights advanced Layer 3 troubleshooting through the successful diagnosis and resolution of a connectivity conflict caused by Open vSwitch bridge interference.
+---
 
-1. DHCP Server (isc-dhcp-server)
-Implemented using a Class C network (192.168.10.0/24).
+## Architecture
+UBUNTU (Router / Controller)
+                ┌─────────────────────────────────┐
+                │         OVS Bridge: bridge12     │
+                │                                  │
+                │  bridge12 (internal) tag:10      │ ← 192.168.10.1 (LAN1 gateway)
+                │  enp0s8 (cable)      tag:10      │ ← connected to Kali (LAN)
+                │  vlan20  (internal)  tag:20      │ ← 192.168.20.1 (LAN2 gateway)
+                │  enp0s9  (cable)     tag:20      │ ← connected to Alpine (LAN2)
+                │                                  │
+                │  enp0s3 (WAN - NAT)              │ ← Internet
+                └─────────────────────────────────┘
+                       |                |
+          ┌────────────┘                └──────────────┐
+          │                                            │
+┌─────────────────┐                        ┌─────────────────┐
+│   Kali Linux    │                        │  Alpine Linux   │
+│ 192.168.10.20   │                        │ 192.168.20.20   │
+│   (LAN - tag10) │                        │  (LAN2 - tag20) │
+└─────────────────┘                        └─────────────────┘
+---
 
+## Stack
 
-Address Pool: Dynamically allocates IPs from 192.168.10.10 to 192.168.10.100.
+- **Hypervisor**: VirtualBox
+- **Router/Server**: Ubuntu (isc-dhcp-server, bind9, Open vSwitch)
+- **Clients**: Kali Linux (VLAN 10) / Alpine Linux (VLAN 20)
+- **Networking**: Netplan, IP Forwarding, NAT (iptables), OVS, VLANs
 
+---
 
-Distributed Options: Injects the Router (Gateway) and DNS settings pointing to the Ubuntu server (192.168.10.1).
+## Features
 
+- Automatic IP assignment via DHCP for both VLANs
+  - VLAN 10 pool: `192.168.10.50 – 192.168.10.200`
+  - VLAN 20 pool: `192.168.20.50 – 192.168.20.200`
+- Private DNS with BIND9 for `akram.lab` domain
+  - Forward zone: `kali.akram.lab` → `192.168.10.20`
+  - Forward zone: `alpine.akram.lab` → `192.168.20.10`
+  - Reverse zone: `10.168.192.in-addr.arpa`
+  - Forwarders: `8.8.8.8` / `1.1.1.1` for external queries
+- IP Forwarding between WAN (`enp0s3`) and LAN (`bridge12`, `vlan20`)
+- NAT masquerading for internet access from all clients
+- SDN with Open vSwitch — VLAN-based traffic isolation
 
-DORA Process: Successfully validated the Discovery, Offer, Request, and Acknowledgment cycle on the Kali client.
+---
 
-2. DNS Server (BIND9)
-Configuration of a private local domain: akram.lab.
+## SDN Concept (Open vSwitch)
 
+This project integrates **Software Defined Networking** by separating:
 
-Forward Lookup Zone: Translates hostnames (e.g., kali.akram.lab) into IP addresses.
+- **Control Plane** → Ubuntu kernel (decides where packets go)
+- **Data Plane** → Open vSwitch bridge12 (moves packets between ports)
+---
 
+## Troubleshooting & Lessons Learned
 
-Reverse Lookup Zone: Translates IPs back to names using the in-addr.arpa structure.
+### 1. OVS Bridge Blocking ICMP (but not DHCP)
 
+**Symptom**: `Destination Host Unreachable` despite correct IP and routing table.  
+**Root Cause**: `enp0s8` was enslaved to OVS but the IP was still assigned to it —
+OVS intercepted all frames, and without flow rules, dropped ARP silently.  
+**Why DHCP survived**: DHCP is L2 broadcast — OVS forwards broadcasts.
+ARP/ICMP are L3 unicast — OVS dropped them with no flow rules configured.  
+**Fix**: `ovs-vsctl del-br bridge1` then reassign IP to the internal port.
 
-Forwarders: Redirects unknown external queries to Google (8.8.8.8) and Cloudflare (1.1.1.1) DNS.
+### 2. Two Internal Ports on Same Tag Broke Ping
 
-🔍 Diagnostic & Troubleshooting (Key Highlight)
-The Open vSwitch (OVS) Conflict
-During testing, a major connectivity issue arose where the client received a Destination Host Unreachable error during ping attempts.
+**Symptom**: Created `vlan10` alongside `bridge12`, both with tag 10 — ping between 
+Kali and Ubuntu failed.  
+**Root Cause**: Two internal ports on the same tag creates an ambiguous path — OVS 
+doesn't know which port to deliver the reply to.  
+**Fix**: Remove `vlan10`, keep only `bridge12` for tag 10.
 
+### 3. DNS Failed Due to a Single Character Typo
 
-Analysis: Systematic checks showed Layer 2 (VirtualBox) and Layer 3 (Routing Table) were correct.
+**Symptom**: BIND9 zones not loading, DNS completely non-functional.  
+**Root Cause**: `in-addr-arpa` instead of `in-addr.arpa` (dash instead of dot).  
+**Lesson**: DNS is extremely sensitive to syntax — always validate with  
+`named-checkconf` and `named-checkzone` before restarting.
 
+### 4. enp0s8 IP Must Be Removed Before Adding to OVS
 
-Root Cause: The enp0s8 interface was found to be "enslaved" to an Open vSwitch (OVS) bridge.
+**Symptom**: Connectivity issues after adding `enp0s8` to OVS while it still had an IP.  
+**Fix**: Always `ip addr flush dev enp0s8` before `ovs-vsctl add-port`.
 
+---
 
-Technical Explanation: When an interface is attached to an OVS bridge, it loses its ability to process IP packets directly, becoming a simple transparent port.
+## Validation Results
 
+| Test | Result |
+|---|---|
+| Kali gets IP via DHCP | ✅ 192.168.10.x |
+| Alpine gets IP via DHCP | ✅ 192.168.20.x |
+| Kali pings Ubuntu | ✅ |
+| Alpine pings Ubuntu | ✅ |
+| Kali resolves kali.akram.lab | ✅ |
+| Alpine resolves kali.akram.lab | ✅ |
+| Kali pings 8.8.8.8 | ✅ |
+| Alpine pings 8.8.8.8 | ✅ |
 
-Resolution: Removed the OVS bridge using ovs-vsctl del-br bridge1, which immediately restored Layer 3 connectivity and successful ICMP pings.
+---
+---
 
-🚀 Validation Results
+## Author
 
-DHCP Verification: Successful allocation of IP 192.168.10.10 to the Kali client.
-
-
-DNS Verification: nslookup tests confirmed the resolution of kali.akram.lab via the 192.168.10.1 server.
-
-📁 Repository Structure
-
-/configs: Contains dhcpd.conf, named.conf.options, and zone files.
-
-
-documentation du proojet: Includes the Full Project Documentation (PDF).
-
-
-Created by Akram Khoulid 3rd-year Networks and Telecommunications Engineering Student at ENSA Safi.
+**Akram Khoulid** — 3rd year Networks & Telecommunications Engineering  
+École Nationale des Sciences Appliquées (ENSA) — Safi  
+April 2026
