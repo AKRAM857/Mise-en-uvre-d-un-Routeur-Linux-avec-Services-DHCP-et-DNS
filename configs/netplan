@@ -5,10 +5,6 @@ network:
     enp0s3:
       dhcp4: true
     enp0s8:
-      addresses:
-        - 192.168.10.1/24
-      nameservers:
-        addresses: [8.8.8.8, 1.1.1.1]
-      routes:
-        - to: default
-          via: 10.0.2.2
+      dhcp4: false
+    enp0s9:
+      dhcp4: false
