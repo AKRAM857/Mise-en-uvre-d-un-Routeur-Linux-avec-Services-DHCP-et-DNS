@@ -1,0 +1,2 @@
+```bash
+arp -s <gateway_ip> <gateway_mac>
