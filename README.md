@@ -122,9 +122,17 @@ Evidence: Wireshark captures (included in /assets) show the forged DNS responses
 Mitigation: Implementing an Authoritative Local DNS
 To defend against external DNS manipulation and increase network sovereignty:
 
-The Solution: I deployed an authoritative BIND9 server on the Ubuntu core.
+## Solution 1: I deployed an authoritative BIND9 server on the Ubuntu core.
 
 The Result: By forcing all clients to resolve through a trusted internal authority, I reduced the attack surface for external poisoning and gained full visibility into local traffic logs.
+
+## Solution 2: Static ARP Binding
+
+To directly mitigate ARP Poisoning at Layer 2, I configured static ARP entries on the client machine.
+
+### Implementation
+The legitimate gateway IP address was manually bound to its correct MAC address using a static ARP entry.
+
 ---
 
 ## Author
