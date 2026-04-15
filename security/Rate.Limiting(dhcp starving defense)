@@ -1,0 +1,4 @@
+ovs-ofctl -O OpenFlow13 add-meter bridge12 \
+  "meter=1,pktps,band=type=drop,rate=10"
+ovs-ofctl -O OpenFlow13 add-flow bridge12 \
+  "priority=200,udp,in_port=enp0s8,tp_src=68,tp_dst=67,actions=meter:1,normal"
