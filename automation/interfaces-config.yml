@@ -1,0 +1,61 @@
+---
+- hosts: localhost
+  become: yes
+  tasks:
+    - name: run netplan
+      ansible.builtin.command:
+        cmd: netplan apply
+
+    - name: Check vlan20 current addresses
+      ansible.builtin.command:
+        cmd: ip addr show dev vlan20
+      register: vlan20_ip
+      changed_when: false
+
+    - name: Bring up vlan20 and assign IP
+      ansible.builtin.command:
+        cmd: ip addr add 192.168.20.1/24 dev vlan20
+      when: "'192.168.20.1' not in vlan20_ip.stdout"   # in case IP is already assigned
+
+    - name: Set vlan20 up
+      ansible.builtin.command:
+        cmd: ip link set vlan20 up
+      when: " 'UP' not in vlan20_ip.stdout"
+
+
+    - name: Check bridge12 current addresses
+      ansible.builtin.command:
+        cmd: ip addr show dev bridge12
+      register: bridge12_ip
+      changed_when: false
+
+    - name: Bring up bridge12 and assign IP
+      ansible.builtin.command:
+        cmd: ip addr add 192.168.10.1/24 dev bridge12
+      when: "'192.168.10.1' not in bridge12_ip.stdout"
+
+    - name: Set bridge12 up
+      ansible.builtin.command:
+        cmd: ip link set bridge12 up
+      when: " 'UP' not in bridge12_ip.stdout"
+    - name: restarting dhcp
+      ansible.builtin.command:
+        cmd: systemctl restart isc-dhcp-server
+
+    - name: checking dhcp
+      ansible.builtin.command:
+        cmd: systemctl status isc-dhcp-server
+      register: dhcp_status
+
+    - name: showing dhcp status
+      ansible.builtin.debug:
+        var: dhcp_status
+
+    - name: checking addresses
+      ansible.builtin.command:
+        cmd: ip addr
+      register: addresses
+
+    - name: checking addresses
+      ansible.builtin.debug:
+        var: addresses
